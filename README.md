@@ -4,7 +4,7 @@ Appel vidéo d'un clic vers une tablette murale, directement dans Home Assistant
 
 ## Installation
 
-1. **Paramètres → Modules complémentaires → Boutique → ⋮ → Dépôts**, ajoute `https://github.com/CHANGE_ME/ha-visio`.
+1. **Paramètres → Modules complémentaires → Boutique → ⋮ → Dépôts**, ajoute `https://github.com/FRHOME/ha-visio`.
 2. Installe **Visio**, règle l'onglet *Configuration*, démarre-la et coche **Afficher dans la barre latérale**.
 
 Détails : [visio/DOCS.md](visio/DOCS.md).
