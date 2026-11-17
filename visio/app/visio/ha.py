@@ -22,6 +22,8 @@ class HomeAssistant:
         self.slug: str | None = None
 
     async def start(self) -> None:
+        if not SUPERVISOR_TOKEN:
+            log.error("SUPERVISOR_TOKEN is missing: Home Assistant cannot be reached")
         self.session = aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"},
             timeout=aiohttp.ClientTimeout(total=10),

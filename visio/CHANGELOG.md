@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Fix: the add-on could not reach Home Assistant (HTTP 401) because the base image init dropped `SUPERVISOR_TOKEN`.
+
 ## 0.2.0
 
 Rewrite: calls between Home Assistant instances, in both directions.
