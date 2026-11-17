@@ -1,36 +1,20 @@
 configuration:
-  device_name:
-    name: Nom de la tablette
-    description: Affiché côté appelant (« Appeler … »).
-  device_user_agent:
-    name: User-Agent de la tablette
-    description: Regex qui reconnaît le navigateur de la tablette (ex. KioskSatellite).
-  device_users:
-    name: Comptes tablette
-    description: Ou bien les comptes Home Assistant utilisés par la tablette.
-  device_ha_url:
-    name: URL de HA vue par la tablette
-    description: "Kiosk Satellite : http://127.0.0.1:2325 (nécessaire pour la caméra)."
-  open_service:
-    name: Service pour ouvrir une page
-    description: "Ex. esphome.ks_<appareil>_open_url"
-  close_service:
-    name: Service pour fermer la page
-    description: "Ex. esphome.ks_<appareil>_close_url"
-  return_button:
-    name: Bouton retour au dashboard
-    description: Pressé à la fin de l'appel (facultatif).
-  turn_off_during_call:
-    name: À couper pendant l'appel
-    description: Remis comme avant à la fin (écran de veille, détection de mouvement…).
-  turn_on_during_call:
-    name: À allumer pendant l'appel
-    description: Remis comme avant à la fin.
+  instance_name:
+    name: Nom de ce Home Assistant
+    description: Comment les autres instances voient celle-ci (ex. Paris, Toulouse, Papi Mamie).
+  peer_url:
+    name: Adresse pair de ce Home Assistant
+    description: "Adresse par laquelle les autres instances joignent celle-ci, ex. http://192.168.1.10:8100. Proposée automatiquement à la création d'une invitation si vide."
   ring_duration:
-    name: Durée de sonnerie (s)
+    name: Durée de sonnerie (secondes)
   ice_servers:
     name: Serveurs STUN/TURN
+    description: Facultatif. Entre deux sites reliés par un VPN (UniFi Site Magic…), aucun n'est nécessaire.
   turn_username:
     name: Utilisateur TURN
   turn_password:
     name: Mot de passe TURN
+  log_level:
+    name: Niveau de journalisation
+network:
+  8100/tcp: Lien pair avec les autres instances Home Assistant

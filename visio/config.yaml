@@ -1,8 +1,8 @@
-name: Visio
-version: "0.1.0"
+name: HA Visio
+version: "0.2.0"
 slug: visio
-description: Appel vidéo d'un clic vers une tablette murale, directement dans Home Assistant
-url: https://github.com/CHANGE_ME/ha-visio
+description: Video calls between Home Assistant instances, on any screen — no app to install
+url: https://github.com/FRHOME/ha-visio
 arch:
   - aarch64
   - amd64
@@ -16,36 +16,25 @@ panel_title: Visio
 panel_admin: false
 homeassistant_api: true
 hassio_api: true
+ports:
+  8100/tcp: 8100
+ports_description:
+  8100/tcp: Peer link with the other Home Assistant instances
 options:
-  device_name: Tablette
-  device_user_agent: ""
-  device_users: []
-  device_ha_url: ""
-  open_service: ""
-  close_service: ""
-  return_button: ""
-  turn_off_during_call: []
-  turn_on_during_call: []
+  instance_name: Home
+  peer_url: ""
   ring_duration: 45
   ice_servers:
     - "stun:stun.l.google.com:19302"
   turn_username: ""
   turn_password: ""
+  log_level: info
 schema:
-  device_name: str
-  device_user_agent: str
-  device_users:
-    - str
-  device_ha_url: str
-  open_service: str
-  close_service: str
-  return_button: str
-  turn_off_during_call:
-    - str
-  turn_on_during_call:
-    - str
+  instance_name: str
+  peer_url: str?
   ring_duration: int(15,180)
   ice_servers:
     - str
-  turn_username: str
-  turn_password: password
+  turn_username: str?
+  turn_password: password?
+  log_level: list(debug|info|warning|error)
