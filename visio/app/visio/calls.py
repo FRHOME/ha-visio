@@ -108,7 +108,7 @@ class CallManager:
                 return ep["name"]
         return client.display
 
-    async def _publish(self) -> None:
+    async def publish(self) -> None:
         calls = list(self.calls.values())
         if any(c.state == "active" for c in calls):
             state = "active"
@@ -204,7 +204,7 @@ class CallManager:
         log.info("Calling %s / %s", contact["name"], call.remote_name)
         await client.send({"type": "calling", "call": call.id, "contact": contact["name"], "target": call.remote_name})
         self._timer(call, self.ring_duration + 15, "missed")
-        await self._publish()
+        await self.publish()
 
     async def accept(self, call: Call, client: Client) -> None:
         assert self.peers
@@ -229,7 +229,7 @@ class CallManager:
         await self.peers.send(call.peer_id, {"type": "call.accept", "call": call.id})
         log.info("Call from %s answered", call.remote_name)
         await self.ha.fire_event("ha_visio_answered", {"call_id": call.id, "from": call.remote_name})
-        await self._publish()
+        await self.publish()
 
     # --- peer side ------------------------------------------------------------------
     async def from_peer(self, peer_id: str, msg: dict) -> None:
@@ -251,7 +251,7 @@ class CallManager:
                 call.timer.cancel()
             if call.client:
                 await call.client.send({"type": "accepted", "call": call.id})
-            await self._publish()
+            await self.publish()
         elif kind == "call.signal" and call.state == "active" and call.client:
             await call.client.send({"type": "signal", "call": call.id, "data": msg.get("data")})
         elif kind == "call.end":
@@ -294,7 +294,7 @@ class CallManager:
             "call_id": call_id, "from": name, "contact": contact["name"],
             "endpoints": [e["name"] for e in free], "endpoint_ids": call.targets,
         })
-        await self._publish()
+        await self.publish()
 
     def _incoming_msg(self, call: Call) -> dict:
         contact = self.store.contact(call.peer_id) or {"name": ""}
@@ -334,4 +334,4 @@ class CallManager:
             "remote": call.remote_name, "contact": contact["name"],
             "duration": int(time.time() - call.answered) if call.answered else 0,
         })
-        await self._publish()
+        await self.publish()

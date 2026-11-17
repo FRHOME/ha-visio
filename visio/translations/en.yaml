@@ -16,5 +16,8 @@ configuration:
     name: TURN password
   log_level:
     name: Log level
+  install_card:
+    name: Dashboard integration
+    description: "Installs the HA Visio card and the incoming-call banner on every dashboard (copies ha-visio.js to /config/www and registers it as a resource)."
 network:
   8100/tcp: Peer link with the other Home Assistant instances

@@ -6,7 +6,10 @@ import logging
 
 from aiohttp import web
 
+import asyncio
+
 from .calls import CallManager
+from .card import install_card
 from .config import DATA_DIR, INGRESS_PORT, PEER_PORT, VERSION, load_options
 from .ha import HomeAssistant
 from .kiosk import Kiosks
@@ -64,9 +67,20 @@ def make_app() -> web.Application:
         log.info("HA Visio %s — instance %s (%s…)", VERSION, peers.my_name, store.instance_id[:8])
         await ha.start()
         await peers.start()
-        await ha.publish("idle", calls=[])
+        await calls.publish()
+        if opts.get("install_card", True):
+            asyncio.create_task(install_card(ha))
+        _app["republish"] = asyncio.create_task(republish())
+
+    async def republish() -> None:
+        # states set through the API vanish when Core restarts: keep the sensor alive
+        while True:
+            await asyncio.sleep(60)
+            await calls.publish()
 
     async def cleanup(_app: web.Application) -> None:
+        if "republish" in _app:
+            _app["republish"].cancel()
         await peers.stop()
         await ha.stop()
 

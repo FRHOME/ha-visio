@@ -1,5 +1,5 @@
 name: HA Visio
-version: "0.2.2"
+version: "0.3.0"
 slug: visio
 description: Video calls between Home Assistant instances, on any screen — no app to install
 url: https://github.com/FRHOME/ha-visio
@@ -16,6 +16,8 @@ panel_title: Visio
 panel_admin: false
 homeassistant_api: true
 hassio_api: true
+map:
+  - homeassistant_config:rw
 ports:
   8100/tcp: 8100
 ports_description:
@@ -29,6 +31,7 @@ options:
   turn_username: ""
   turn_password: ""
   log_level: info
+  install_card: true
 schema:
   instance_name: str
   peer_url: str?
@@ -38,3 +41,4 @@ schema:
   turn_username: str?
   turn_password: password?
   log_level: list(debug|info|warning|error)
+  install_card: bool
