@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- A missing, blocked or busy camera/microphone no longer prevents calling or answering: falls back to audio only, then to see-and-hear without being seen, with a message giving the actual cause.
+
 ## 0.2.1
 
 - Fix: the add-on could not reach Home Assistant (HTTP 401) because the base image init dropped `SUPERVISOR_TOKEN`.
