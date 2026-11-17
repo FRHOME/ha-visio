@@ -78,10 +78,14 @@ async def main():
         check(st == 400, "invalid regex rejected")
 
         print("Dashboard card install")
-        await asyncio.sleep(1)
+        reg = []
+        for _ in range(40):  # installed in the background at startup
+            reg = [json.loads(l) for l in open(SUP_LOG_B)] if os.path.exists(SUP_LOG_B) else []
+            if any(x["path"] == "ws:lovelace/resources/create" for x in reg) and any(x["path"] == "/core/api/states/sensor.ha_visio" for x in reg):
+                break
+            await asyncio.sleep(0.25)
         js = "/tmp/visio-toulouse/haconfig/www/ha-visio/ha-visio.js"
         check(os.path.exists(js), "ha-visio.js copied to /config/www/ha-visio")
-        reg = [json.loads(l) for l in open(SUP_LOG_B)] if os.path.exists(SUP_LOG_B) else []
         created = [x for x in reg if x["path"] == "ws:lovelace/resources/create"]
         check(created and created[0]["body"]["url"].startswith("/local/ha-visio/ha-visio.js?v=") and "slug=test_visio" in created[0]["body"]["url"], "Lovelace resource registered")
         sensor = [x for x in reg if x["path"] == "/core/api/states/sensor.ha_visio"]
