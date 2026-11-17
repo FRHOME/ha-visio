@@ -1,0 +1,36 @@
+configuration:
+  device_name:
+    name: Tablet name
+    description: Shown to the caller ("Call …").
+  device_user_agent:
+    name: Tablet User-Agent
+    description: Regex matching the tablet's browser (e.g. KioskSatellite).
+  device_users:
+    name: Tablet accounts
+    description: Or the Home Assistant accounts used by the tablet.
+  device_ha_url:
+    name: HA URL as seen by the tablet
+    description: "Kiosk Satellite: http://127.0.0.1:2325 (required for camera access)."
+  open_service:
+    name: Open-page service
+    description: "e.g. esphome.ks_<device>_open_url"
+  close_service:
+    name: Close-page service
+    description: "e.g. esphome.ks_<device>_close_url"
+  return_button:
+    name: Back-to-dashboard button
+    description: Pressed when the call ends (optional).
+  turn_off_during_call:
+    name: Turn off during call
+    description: Restored afterwards (screensaver, motion detection…).
+  turn_on_during_call:
+    name: Turn on during call
+    description: Restored afterwards.
+  ring_duration:
+    name: Ring duration (s)
+  ice_servers:
+    name: STUN/TURN servers
+  turn_username:
+    name: TURN username
+  turn_password:
+    name: TURN password

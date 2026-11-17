@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visio</title>
+<style>
+  :root { --bg:#0f1115; --card:#1a1d24; --txt:#f2f3f5; --mut:#9aa0aa; --ok:#22c55e; --ko:#ef4444; --acc:#3b82f6; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; background:var(--bg); color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; user-select:none; }
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:24px; text-align:center; }
+  .screen.on { display:flex; }
+  h1 { font-size:clamp(28px,5vw,48px); font-weight:700; }
+  p.sub { font-size:clamp(16px,2.6vw,24px); color:var(--mut); }
+  .avatar { width:clamp(110px,18vw,170px); aspect-ratio:1; border-radius:50%; background:var(--card); display:grid; place-items:center; font-size:clamp(48px,8vw,80px); }
+  .pulse { animation:pulse 1.4s ease-out infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 100%{box-shadow:0 0 0 40px rgba(34,197,94,0)} }
+  .row { display:flex; gap:clamp(32px,8vw,90px); }
+  .btn { border:0; border-radius:999px; color:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; font-size:clamp(16px,2.4vw,22px); font-weight:600; }
+  .btn .c { width:clamp(84px,13vw,120px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; transition:transform .1s; }
+  .btn:active .c { transform:scale(.93); }
+  .btn svg { width:46%; height:46%; fill:#fff; }
+  .g .c { background:var(--ok); } .r .c { background:var(--ko); } .n .c { background:#2a2f3a; } .n.off .c { background:#fff; } .n.off svg { fill:#111; }
+  .big { padding:22px 40px; border-radius:20px; background:var(--ok); font-size:clamp(20px,3vw,28px); font-weight:700; color:#fff; border:0; display:flex; align-items:center; gap:14px; }
+  .big svg { width:30px; height:30px; fill:#fff; }
+  #call { background:#000; padding:0; }
+  #remote { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+  #local { position:absolute; right:16px; top:16px; width:clamp(110px,22vw,220px); aspect-ratio:3/4; object-fit:cover; border-radius:14px; border:2px solid rgba(255,255,255,.3); transform:scaleX(-1); background:#222; }
+  #bar { position:absolute; left:0; right:0; bottom:0; padding:22px 0 calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:clamp(24px,6vw,60px); background:linear-gradient(transparent,rgba(0,0,0,.65)); }
+  #bar .c { width:clamp(64px,10vw,86px); }
+  #timer { position:absolute; left:16px; top:16px; padding:6px 12px; border-radius:10px; background:rgba(0,0,0,.45); font-size:18px; font-variant-numeric:tabular-nums; }
+  #net { position:absolute; left:16px; top:56px; font-size:14px; color:#fbbf24; }
+  #msg { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--card); padding:10px 18px; border-radius:12px; font-size:16px; display:none; }
+</style>
+</head>
+<body>
+
+<!-- Appelant : prêt -->
+<section class="screen" id="idle">
+  <div class="avatar">👵👴</div>
+  <h1 id="idleTitle">Appeler</h1>
+  <button class="big" id="btnCall"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg><span>Appeler</span></button>
+  <p class="sub" id="idleSub">La tablette va sonner.</p>
+</section>
+
+<!-- Appelant : ça sonne -->
+<section class="screen" id="out">
+  <div class="avatar pulse">📞</div>
+  <h1 id="outTitle">Appel en cours…</h1>
+  <p class="sub">La tablette sonne</p>
+  <button class="btn r" id="btnCancel"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Annuler</button>
+</section>
+
+<!-- Tablette : appel entrant -->
+<section class="screen" id="in">
+  <div class="avatar pulse">📞</div>
+  <h1 id="inTitle">Appel</h1>
+  <p class="sub">Appel vidéo</p>
+  <div class="row">
+    <button class="btn r" id="btnDecline"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Refuser</button>
+    <button class="btn g" id="btnAccept"><span class="c"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span>Répondre</button>
+  </div>
+</section>
+
+<!-- Tablette : en attente -->
+<section class="screen" id="wait">
+  <div class="avatar">📞</div>
+  <h1>Visio</h1>
+  <p class="sub">Aucun appel en cours</p>
+</section>
+
+<!-- Fin -->
+<section class="screen" id="end">
+  <div class="avatar">👋</div>
+  <h1 id="endTitle">Appel terminé</h1>
+  <p class="sub" id="endSub"></p>
+</section>
+
+<!-- En communication -->
+<section class="screen" id="call">
+  <video id="remote" autoplay playsinline></video>
+  <video id="local" autoplay playsinline muted></video>
+  <div id="timer">00:00</div>
+  <div id="net"></div>
+  <div id="bar">
+    <button class="btn n" id="btnMic"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg></span>Micro</button>
+    <button class="btn r" id="btnHang"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Raccrocher</button>
+    <button class="btn n" id="btnCam"><span class="c"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></span>Caméra</button>
+  </div>
+</section>
+
+<div id="msg"></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const base = new URL('.', location.href);
+  let cfg, ws, role, pc, localStream, pendingIce = [], ringCtx, ringTimer, clock, t0, retry = 0, inCall = false;
+
+  function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+  function toast(t) { const m = $('msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(m._t); m._t = setTimeout(() => m.style.display = 'none', 4000); }
+  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+
+  // ---------- sonnerie ----------
+  function ringStart(kind) {
+    ringStop();
+    try {
+      ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const beep = () => {
+        const notes = kind === 'out' ? [[425, 0, 1.0]] : [[880, 0, .25], [660, .3, .25], [880, .6, .25], [660, .9, .25]];
+        for (const [f, at, d] of notes) {
+          const o = ringCtx.createOscillator(), g = ringCtx.createGain();
+          o.frequency.value = f; o.type = 'sine';
+          const t = ringCtx.currentTime + at;
+          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(kind === 'out' ? .15 : .6, t + .02);
+          g.gain.setValueAtTime(kind === 'out' ? .15 : .6, t + d - .03); g.gain.linearRampToValueAtTime(0, t + d);
+          o.connect(g).connect(ringCtx.destination); o.start(t); o.stop(t + d + .05);
+        }
+      };
+      beep(); ringTimer = setInterval(beep, kind === 'out' ? 4000 : 2200);
+    } catch (e) {}
+    if (kind === 'in' && navigator.vibrate) navigator.vibrate([600, 400, 600, 400, 600]);
+  }
+  function ringStop() { clearInterval(ringTimer); ringTimer = null; if (ringCtx) { ringCtx.close().catch(() => {}); ringCtx = null; } }
+
+  // ---------- média ----------
+  async function getMedia() {
+    if (localStream) return localStream;
+    if (!navigator.mediaDevices || !window.isSecureContext) throw new Error('insecure');
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    $('local').srcObject = localStream;
+    return localStream;
+  }
+  function stopMedia() { if (localStream) localStream.getTracks().forEach(t => t.stop()); localStream = null; $('local').srcObject = null; $('remote').srcObject = null; }
+
+  function makePc() {
+    pc = new RTCPeerConnection({ iceServers: cfg.ice });
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+    pc.onicecandidate = (e) => { if (e.candidate) send({ type: 'signal', data: { ice: e.candidate } }); };
+    pc.ontrack = (e) => { const v = $('remote'); if (v.srcObject !== e.streams[0]) { v.srcObject = e.streams[0]; v.play().catch(() => {}); } };
+    pc.onconnectionstatechange = () => {
+      const s = pc && pc.connectionState;
+      $('net').textContent = s === 'disconnected' ? 'Connexion instable…' : s === 'failed' ? 'Connexion perdue' : '';
+      if (s === 'failed') hangup();
+    };
+  }
+  async function onSignal(d) {
+    if (!pc) return;
+    if (d.sdp) {
+      await pc.setRemoteDescription(d.sdp);
+      for (const c of pendingIce) await pc.addIceCandidate(c).catch(() => {});
+      pendingIce = [];
+      if (d.sdp.type === 'offer') {
+        await pc.setLocalDescription(await pc.createAnswer());
+        send({ type: 'signal', data: { sdp: pc.localDescription } });
+      }
+    } else if (d.ice) {
+      if (pc.remoteDescription) await pc.addIceCandidate(d.ice).catch(() => {});
+      else pendingIce.push(d.ice);
+    }
+  }
+
+  function enterCall() {
+    inCall = true; ringStop(); show('call');
+    t0 = Date.now(); clearInterval(clock);
+    clock = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 1000);
+  }
+  function cleanup() {
+    ringStop(); clearInterval(clock); inCall = false;
+    if (pc) { pc.close(); pc = null; } pendingIce = []; stopMedia();
+    $('btnMic').classList.remove('off'); $('btnCam').classList.remove('off');
+  }
+  const REASONS = { hangup: 'Appel terminé', declined: 'Appel refusé', missed: 'Pas de réponse', disconnected: 'Appel coupé', gone: 'Appel terminé', taken: 'Répondu sur un autre écran' };
+  function finished(reason) {
+    cleanup();
+    $('endTitle').textContent = REASONS[reason] || 'Appel terminé';
+    $('endSub').textContent = role === 'appelant' && reason === 'missed' ? 'Ils n\'ont pas décroché, réessaie plus tard.' : '';
+    show('end');
+    setTimeout(() => show(role === 'tablette' ? 'wait' : 'idle'), role === 'tablette' ? 2500 : 3000);
+  }
+  function hangup() { send({ type: 'hangup' }); finished('hangup'); }
+
+  // ---------- actions ----------
+  $('btnCall').onclick = async () => {
+    try { await getMedia(); } catch (e) { toast(e.message === 'insecure' ? 'Il faut ouvrir Home Assistant en HTTPS pour la caméra.' : 'Autorise la caméra et le micro.'); return; }
+    send({ type: 'call' }); show('out'); ringStart('out');
+  };
+  $('btnCancel').onclick = hangup;
+  $('btnAccept').onclick = async () => {
+    ringStop();
+    try { await getMedia(); } catch (e) { toast('Caméra ou micro indisponible'); }
+    if (!localStream) { send({ type: 'decline' }); finished('disconnected'); return; }
+    makePc(); send({ type: 'accept' }); enterCall();
+  };
+  $('btnDecline').onclick = () => { send({ type: 'decline' }); finished('declined'); };
+  $('btnHang').onclick = hangup;
+  $('btnMic').onclick = () => { if (!localStream) return; const t = localStream.getAudioTracks()[0]; if (t) { t.enabled = !t.enabled; $('btnMic').classList.toggle('off', !t.enabled); } };
+  $('btnCam').onclick = () => { if (!localStream) return; const t = localStream.getVideoTracks()[0]; if (t) { t.enabled = !t.enabled; $('btnCam').classList.toggle('off', !t.enabled); } };
+
+  // ---------- signalisation ----------
+  async function onMessage(m) {
+    switch (m.type) {
+      case 'welcome':
+        retry = 0;
+        if (!inCall) show(role === 'tablette' ? 'wait' : 'idle');
+        break;
+      case 'incoming':
+        if (role !== 'tablette' || inCall) break;
+        $('inTitle').textContent = (m.from || 'Quelqu\'un') + ' vous appelle';
+        show('in'); ringStart('in');
+        break;
+      case 'accepted':
+        enterCall(); makePc();
+        await pc.setLocalDescription(await pc.createOffer());
+        send({ type: 'signal', data: { sdp: pc.localDescription } });
+        break;
+      case 'signal': await onSignal(m.data || {}); break;
+      case 'busy': cleanup(); toast('Un appel est déjà en cours'); show('idle'); break;
+      case 'taken': if (!inCall) finished('taken'); break;
+      case 'ended': finished(m.reason); break;
+    }
+  }
+  function connect() {
+    const u = new URL('ws', base); u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    if (new URLSearchParams(location.search).get('role')) u.search = location.search;
+    ws = new WebSocket(u);
+    ws.onmessage = (e) => { try { onMessage(JSON.parse(e.data)); } catch (err) { console.error(err); } };
+    ws.onclose = () => {
+      if (inCall || $('out').classList.contains('on') || $('in').classList.contains('on')) finished('disconnected');
+      setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000));
+    };
+  }
+
+  (async () => {
+    const q = location.search;
+    cfg = await (await fetch(new URL('config.json' + q, base), { cache: 'no-store' })).json();
+    role = cfg.role;
+    $('idleTitle').textContent = 'Appeler ' + cfg.device_name;
+    $('outTitle').textContent = 'Appel de ' + cfg.device_name + '…';
+    show(role === 'tablette' ? 'wait' : 'idle');
+    connect();
+  })().catch(() => toast('Impossible de joindre le serveur'));
+})();
+</script>
+</body>
+</html>
