@@ -21,7 +21,7 @@ DEV_MODE = os.environ.get("VISIO_DEV") == "1"
 INGRESS_PORT = int(os.environ.get("VISIO_PORT", "8099"))
 PEER_PORT = int(os.environ.get("VISIO_PEER_PORT", "8100"))
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 PROTOCOL = 1
 
 DEFAULTS: dict = {

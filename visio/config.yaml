@@ -1,5 +1,5 @@
 name: HA Visio
-version: "0.2.0"
+version: "0.2.1"
 slug: visio
 description: Video calls between Home Assistant instances, on any screen — no app to install
 url: https://github.com/FRHOME/ha-visio
