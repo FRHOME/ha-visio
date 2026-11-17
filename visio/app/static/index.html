@@ -1,92 +1,156 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Visio</title>
+<title>HA Visio</title>
 <style>
-  :root { --bg:#0f1115; --card:#1a1d24; --txt:#f2f3f5; --mut:#9aa0aa; --ok:#22c55e; --ko:#ef4444; --acc:#3b82f6; }
+  :root { --bg:#0f1115; --card:#1a1d24; --card2:#232733; --line:#2e3340; --txt:#f2f3f5; --mut:#9aa0aa;
+          --ok:#22c55e; --ko:#ef4444; --acc:#3b82f6; --warn:#fbbf24; }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   html, body { height:100%; background:var(--bg); color:var(--txt);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; user-select:none; }
-  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:24px; text-align:center; }
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  body { overflow:hidden; }
+  button { font:inherit; color:inherit; cursor:pointer; }
+  input, select, textarea { font:inherit; color:var(--txt); background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; width:100%; }
+  textarea { min-height:64px; resize:vertical; font-family:ui-monospace,monospace; font-size:13px; }
+  label { display:block; font-size:14px; color:var(--mut); margin:12px 0 6px; }
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; padding:24px; text-align:center; user-select:none; }
   .screen.on { display:flex; }
-  h1 { font-size:clamp(28px,5vw,48px); font-weight:700; }
-  p.sub { font-size:clamp(16px,2.6vw,24px); color:var(--mut); }
+  .page { position:fixed; inset:0; display:none; overflow-y:auto; padding:20px 16px 60px; }
+  .page.on { display:block; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-size:clamp(26px,5vw,44px); font-weight:700; }
+  h2 { font-size:20px; margin:28px 0 12px; }
+  p.sub { font-size:clamp(16px,2.6vw,22px); color:var(--mut); }
+  .hint { font-size:13px; color:var(--mut); margin-top:6px; line-height:1.4; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+  .top h1 { font-size:26px; }
+  .iconbtn { background:var(--card); border:0; border-radius:12px; width:44px; height:44px; font-size:22px; display:grid; place-items:center; }
+  .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; }
+  .contact-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .contact-head b { font-size:19px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--mut); flex:none; }
+  .dot.on { background:var(--ok); }
+  .muted { color:var(--mut); font-size:14px; }
+  .targets { display:flex; flex-wrap:wrap; gap:10px; }
+  .target { background:var(--card2); border:0; border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:10px;
+    font-size:17px; font-weight:600; min-height:56px; }
+  .target.all { background:var(--ok); color:#fff; }
+  .target:disabled { opacity:.4; cursor:default; }
+  .target:active:not(:disabled) { transform:scale(.97); }
+  .empty { text-align:center; padding:48px 16px; color:var(--mut); line-height:1.5; }
   .avatar { width:clamp(110px,18vw,170px); aspect-ratio:1; border-radius:50%; background:var(--card); display:grid; place-items:center; font-size:clamp(48px,8vw,80px); }
   .pulse { animation:pulse 1.4s ease-out infinite; }
   @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)} 100%{box-shadow:0 0 0 40px rgba(34,197,94,0)} }
   .row { display:flex; gap:clamp(32px,8vw,90px); }
-  .btn { border:0; border-radius:999px; color:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; font-size:clamp(16px,2.4vw,22px); font-weight:600; }
+  .btn { border:0; border-radius:999px; display:flex; flex-direction:column; align-items:center; gap:10px; background:none; font-size:clamp(16px,2.4vw,22px); font-weight:600; color:#fff; }
   .btn .c { width:clamp(84px,13vw,120px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; transition:transform .1s; }
   .btn:active .c { transform:scale(.93); }
   .btn svg { width:46%; height:46%; fill:#fff; }
   .g .c { background:var(--ok); } .r .c { background:var(--ko); } .n .c { background:#2a2f3a; } .n.off .c { background:#fff; } .n.off svg { fill:#111; }
-  .big { padding:22px 40px; border-radius:20px; background:var(--ok); font-size:clamp(20px,3vw,28px); font-weight:700; color:#fff; border:0; display:flex; align-items:center; gap:14px; }
-  .big svg { width:30px; height:30px; fill:#fff; }
   #call { background:#000; padding:0; }
   #remote { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
   #local { position:absolute; right:16px; top:16px; width:clamp(110px,22vw,220px); aspect-ratio:3/4; object-fit:cover; border-radius:14px; border:2px solid rgba(255,255,255,.3); transform:scaleX(-1); background:#222; }
   #bar { position:absolute; left:0; right:0; bottom:0; padding:22px 0 calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:clamp(24px,6vw,60px); background:linear-gradient(transparent,rgba(0,0,0,.65)); }
   #bar .c { width:clamp(64px,10vw,86px); }
   #timer { position:absolute; left:16px; top:16px; padding:6px 12px; border-radius:10px; background:rgba(0,0,0,.45); font-size:18px; font-variant-numeric:tabular-nums; }
-  #net { position:absolute; left:16px; top:56px; font-size:14px; color:#fbbf24; }
-  #msg { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--card); padding:10px 18px; border-radius:12px; font-size:16px; display:none; }
+  #net { position:absolute; left:16px; top:56px; font-size:14px; color:var(--warn); }
+  #msg { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--card2); padding:12px 18px; border-radius:12px; font-size:16px; display:none; z-index:10; max-width:90vw; text-align:center; }
+  .act { border:0; border-radius:10px; padding:10px 16px; background:var(--acc); color:#fff; font-weight:600; }
+  .act.sec { background:var(--card2); color:var(--txt); }
+  .act.danger { background:transparent; color:var(--ko); border:1px solid var(--ko); }
+  .acts { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .item { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .item .name { font-weight:600; }
+  .code { word-break:break-all; font-family:ui-monospace,monospace; font-size:12px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px; margin-top:10px; user-select:all; }
+  .check { display:flex; align-items:center; gap:10px; margin:8px 0; color:var(--txt); font-size:15px; }
+  .check input { width:auto; }
+  details { margin-top:12px; } summary { cursor:pointer; color:var(--acc); font-size:15px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  @media (max-width:560px) { .grid2 { grid-template-columns:1fr; } }
+  .err { color:var(--ko); font-size:14px; margin-top:8px; }
 </style>
 </head>
 <body>
 
-<!-- Appelant : prêt -->
-<section class="screen" id="idle">
-  <div class="avatar">👵👴</div>
-  <h1 id="idleTitle">Appeler</h1>
-  <button class="big" id="btnCall"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg><span>Appeler</span></button>
-  <p class="sub" id="idleSub">La tablette va sonner.</p>
-</section>
-
-<!-- Appelant : ça sonne -->
-<section class="screen" id="out">
-  <div class="avatar pulse">📞</div>
-  <h1 id="outTitle">Appel en cours…</h1>
-  <p class="sub">La tablette sonne</p>
-  <button class="btn r" id="btnCancel"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Annuler</button>
-</section>
-
-<!-- Tablette : appel entrant -->
-<section class="screen" id="in">
-  <div class="avatar pulse">📞</div>
-  <h1 id="inTitle">Appel</h1>
-  <p class="sub">Appel vidéo</p>
-  <div class="row">
-    <button class="btn r" id="btnDecline"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Refuser</button>
-    <button class="btn g" id="btnAccept"><span class="c"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span>Répondre</button>
+<!-- Home: contacts to call -->
+<section class="page on" id="home">
+  <div class="wrap">
+    <div class="top"><h1 id="homeTitle">HA Visio</h1><button class="iconbtn" id="btnSettings" hidden aria-label="Settings">⚙️</button></div>
+    <div id="contacts"></div>
   </div>
 </section>
 
-<!-- Tablette : en attente -->
-<section class="screen" id="wait">
-  <div class="avatar">📞</div>
-  <h1>Visio</h1>
-  <p class="sub">Aucun appel en cours</p>
+<!-- Settings -->
+<section class="page" id="settings">
+  <div class="wrap">
+    <div class="top"><h1 data-t="settings"></h1><button class="iconbtn" id="btnBack" aria-label="Back">✕</button></div>
+    <div class="card">
+      <div class="item"><span class="name" id="instName"></span><span class="muted" id="instVer"></span></div>
+      <p class="hint" data-t="instanceHint"></p>
+    </div>
+
+    <h2 data-t="endpoints"></h2>
+    <p class="hint" style="margin:-4px 0 12px" data-t="endpointsHint"></p>
+    <div id="epList"></div>
+    <div class="acts"><button class="act sec" id="btnAddEp" data-t="addEndpoint"></button></div>
+    <div class="card" id="epForm" hidden style="margin-top:12px"></div>
+
+    <h2 data-t="contacts"></h2>
+    <div id="ctList"></div>
+    <div class="acts">
+      <button class="act" id="btnInvite" data-t="invite"></button>
+      <button class="act sec" id="btnJoin" data-t="join"></button>
+    </div>
+    <div class="card" id="pairBox" hidden style="margin-top:12px"></div>
+
+    <h2 data-t="thisDevice"></h2>
+    <div class="card">
+      <div class="muted" id="meInfo"></div>
+      <div class="code" id="meUa"></div>
+    </div>
+  </div>
 </section>
 
-<!-- Fin -->
+<!-- Outgoing -->
+<section class="screen" id="out">
+  <div class="avatar pulse">📞</div>
+  <h1 id="outTitle"></h1>
+  <p class="sub" id="outSub"></p>
+  <button class="btn r" id="btnCancel"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span><span data-t="cancel"></span></button>
+</section>
+
+<!-- Incoming -->
+<section class="screen" id="in">
+  <div class="avatar pulse">📞</div>
+  <h1 id="inTitle"></h1>
+  <p class="sub" id="inSub"></p>
+  <div class="row">
+    <button class="btn r" id="btnDecline"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span><span data-t="decline"></span></button>
+    <button class="btn g" id="btnAccept"><span class="c"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span><span data-t="accept"></span></button>
+  </div>
+</section>
+
+<!-- End -->
 <section class="screen" id="end">
   <div class="avatar">👋</div>
-  <h1 id="endTitle">Appel terminé</h1>
+  <h1 id="endTitle"></h1>
   <p class="sub" id="endSub"></p>
 </section>
 
-<!-- En communication -->
+<!-- In call -->
 <section class="screen" id="call">
   <video id="remote" autoplay playsinline></video>
   <video id="local" autoplay playsinline muted></video>
   <div id="timer">00:00</div>
   <div id="net"></div>
   <div id="bar">
-    <button class="btn n" id="btnMic"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg></span>Micro</button>
-    <button class="btn r" id="btnHang"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span>Raccrocher</button>
-    <button class="btn n" id="btnCam"><span class="c"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></span>Caméra</button>
+    <button class="btn n" id="btnMic"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2z"/></svg></span><span data-t="mic"></span></button>
+    <button class="btn r" id="btnHang"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.7v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.1a1 1 0 0 1 0-1.4C3.4 8.8 7.5 7 12 7s8.6 1.8 11.7 4.7c.4.4.4 1 0 1.4l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8a1 1 0 0 1-.6-.9V9.7C15.1 9.3 13.6 9 12 9z"/></svg></span><span data-t="hangup"></span></button>
+    <button class="btn n" id="btnCam"><span class="c"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></span><span data-t="camera"></span></button>
   </div>
 </section>
 
@@ -94,15 +158,283 @@
 
 <script>
 (() => {
+  // ---------- i18n ----------
+  const I18N = {
+    en: {
+      settings: 'Settings', cancel: 'Cancel', decline: 'Decline', accept: 'Answer', mic: 'Mic', camera: 'Camera', hangup: 'Hang up',
+      callEveryone: 'Everyone', offline: 'Offline', online: 'Online', noContacts: 'No contacts yet.', noContactsAdmin: 'Open the settings (⚙️) to pair another Home Assistant.',
+      noTargets: 'Nothing to call on this Home Assistant.', calling: 'Calling {0}…', ringingThere: 'Ringing…', connecting: 'Connecting…',
+      incoming: '{0} is calling', incomingFrom: 'Video call · {0}',
+      endHangup: 'Call ended', endDeclined: 'Call declined', endMissed: 'No answer', endBusy: 'Busy', endUnavailable: 'Unavailable',
+      endOffline: 'Not reachable', endDisconnected: 'Call dropped', endCancelled: 'Call ended', endTaken: 'Answered on another screen',
+      missedSub: 'Try again later.', unstable: 'Unstable connection…', lost: 'Connection lost',
+      needHttps: 'Camera access needs Home Assistant opened over HTTPS (or http://127.0.0.1 on a kiosk).', needPerm: 'Allow the camera and microphone.',
+      noMedia: 'Camera or microphone unavailable', serverDown: 'Cannot reach the add-on', errBusyLocal: 'A call is already in progress',
+      errOffline: 'This Home Assistant is not reachable', errUnavailable: 'Not available', errUnknownContact: 'Unknown contact',
+      instanceHint: 'The name and network options are in the add-on Configuration tab.',
+      endpoints: 'Screens & people here', endpointsHint: 'What other Home Assistants can call on this one.',
+      addEndpoint: '+ Add a screen or a person', noEndpoints: 'Nothing yet: other Home Assistants cannot call you.',
+      kindScreen: 'Screen (wall tablet, kiosk…)', kindPerson: 'Person (a Home Assistant user)',
+      fName: 'Name', fKind: 'Type', fUa: 'Recognise the browser by its User-Agent (regex)', fUaUse: 'Use this browser', fUsers: 'Or by Home Assistant users (one per line)',
+      fRingAll: 'Rings when a contact calls “Everyone”', fKiosk: 'Kiosk control (Kiosk Satellite…)',
+      fKioskUrl: 'Home Assistant URL as seen by the kiosk', fKioskUrlHint: 'Kiosk Satellite: http://127.0.0.1:2325 (needed for the camera).',
+      fOpen: 'Service that opens a page', fOpenHint: 'e.g. esphome.ks_tablet_open_url', fClose: 'Service that closes the page', fCloseHint: 'e.g. esphome.ks_tablet_close_url',
+      fReturn: 'Button pressed after the call (optional)', fOff: 'Switched off during the call, restored after (one per line)', fOn: 'Switched on during the call, restored after (one per line)',
+      save: 'Save', remove: 'Remove', close: 'Close', saved: 'Saved', confirmRemoveEp: 'Remove “{0}”?',
+      contacts: 'Contacts (other Home Assistants)', noCt: 'No contact yet.', invite: 'Invite a Home Assistant', join: 'I have a code',
+      ctAddress: 'Peer address of this contact', ctShare: 'What this contact can call here', ctShareAll: 'Everything (default)',
+      confirmUnpair: 'Remove the pairing with “{0}”? It will be removed on both sides.',
+      myAddress: 'Address of THIS Home Assistant, reachable by the other one', myAddressHint: 'IP of this Home Assistant on your network (or through Site Magic / VPN) and the peer port {0}.',
+      makeCode: 'Create the code', codeIntro: 'Paste this code in HA Visio on the other Home Assistant (“I have a code”). Valid 15 minutes, once.',
+      copy: 'Copy', copied: 'Copied', pasteCode: 'Invitation code', doJoin: 'Pair', paired: 'Paired with {0}',
+      thisDevice: 'This browser', meUser: 'Signed in as {0}', meEps: 'Recognised as: {0}', meNone: 'Not recognised as any screen or person.',
+    },
+    fr: {
+      settings: 'Réglages', cancel: 'Annuler', decline: 'Refuser', accept: 'Répondre', mic: 'Micro', camera: 'Caméra', hangup: 'Raccrocher',
+      callEveryone: 'Tout le monde', offline: 'Hors ligne', online: 'En ligne', noContacts: 'Aucun contact pour l\'instant.', noContactsAdmin: 'Ouvre les réglages (⚙️) pour appairer un autre Home Assistant.',
+      noTargets: 'Rien à appeler sur ce Home Assistant.', calling: 'Appel de {0}…', ringingThere: 'Ça sonne…', connecting: 'Connexion…',
+      incoming: '{0} vous appelle', incomingFrom: 'Appel vidéo · {0}',
+      endHangup: 'Appel terminé', endDeclined: 'Appel refusé', endMissed: 'Pas de réponse', endBusy: 'Occupé', endUnavailable: 'Indisponible',
+      endOffline: 'Injoignable', endDisconnected: 'Appel coupé', endCancelled: 'Appel terminé', endTaken: 'Répondu sur un autre écran',
+      missedSub: 'Réessaie plus tard.', unstable: 'Connexion instable…', lost: 'Connexion perdue',
+      needHttps: 'La caméra exige Home Assistant ouvert en HTTPS (ou http://127.0.0.1 sur un kiosque).', needPerm: 'Autorise la caméra et le micro.',
+      noMedia: 'Caméra ou micro indisponible', serverDown: 'Impossible de joindre le module', errBusyLocal: 'Un appel est déjà en cours',
+      errOffline: 'Ce Home Assistant est injoignable', errUnavailable: 'Indisponible', errUnknownContact: 'Contact inconnu',
+      instanceHint: 'Le nom et les options réseau sont dans l\'onglet Configuration du module.',
+      endpoints: 'Écrans et personnes ici', endpointsHint: 'Ce que les autres Home Assistant peuvent appeler sur celui-ci.',
+      addEndpoint: '+ Ajouter un écran ou une personne', noEndpoints: 'Rien pour l\'instant : les autres Home Assistant ne peuvent pas t\'appeler.',
+      kindScreen: 'Écran (tablette murale, kiosque…)', kindPerson: 'Personne (un utilisateur Home Assistant)',
+      fName: 'Nom', fKind: 'Type', fUa: 'Reconnaître le navigateur par son User-Agent (regex)', fUaUse: 'Utiliser ce navigateur', fUsers: 'Ou par utilisateurs Home Assistant (un par ligne)',
+      fRingAll: 'Sonne quand un contact appelle « Tout le monde »', fKiosk: 'Pilotage du kiosque (Kiosk Satellite…)',
+      fKioskUrl: 'URL de Home Assistant vue par le kiosque', fKioskUrlHint: 'Kiosk Satellite : http://127.0.0.1:2325 (nécessaire pour la caméra).',
+      fOpen: 'Service qui ouvre une page', fOpenHint: 'ex. esphome.ks_tablette_open_url', fClose: 'Service qui ferme la page', fCloseHint: 'ex. esphome.ks_tablette_close_url',
+      fReturn: 'Bouton pressé après l\'appel (facultatif)', fOff: 'À couper pendant l\'appel, remis après (un par ligne)', fOn: 'À allumer pendant l\'appel, remis après (un par ligne)',
+      save: 'Enregistrer', remove: 'Supprimer', close: 'Fermer', saved: 'Enregistré', confirmRemoveEp: 'Supprimer « {0} » ?',
+      contacts: 'Contacts (autres Home Assistant)', noCt: 'Aucun contact pour l\'instant.', invite: 'Inviter un Home Assistant', join: 'J\'ai un code',
+      ctAddress: 'Adresse pair de ce contact', ctShare: 'Ce que ce contact peut appeler ici', ctShareAll: 'Tout (par défaut)',
+      confirmUnpair: 'Supprimer l\'appairage avec « {0} » ? Il sera supprimé des deux côtés.',
+      myAddress: 'Adresse de CE Home Assistant, joignable par l\'autre', myAddressHint: 'IP de ce Home Assistant sur ton réseau (ou via Site Magic / VPN) et le port pair {0}.',
+      makeCode: 'Créer le code', codeIntro: 'Colle ce code dans HA Visio sur l\'autre Home Assistant (« J\'ai un code »). Valable 15 minutes, une seule fois.',
+      copy: 'Copier', copied: 'Copié', pasteCode: 'Code d\'invitation', doJoin: 'Appairer', paired: 'Appairé avec {0}',
+      thisDevice: 'Ce navigateur', meUser: 'Connecté en tant que {0}', meEps: 'Reconnu comme : {0}', meNone: 'Reconnu comme aucun écran ni personne.',
+    },
+  };
+  const LANG = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  document.documentElement.lang = LANG;
+  const t = (k, ...a) => (I18N[LANG][k] ?? I18N.en[k] ?? k).replace(/\{(\d)\}/g, (_, i) => a[i] ?? '');
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+
+  // ---------- helpers ----------
   const $ = (id) => document.getElementById(id);
   const base = new URL('.', location.href);
-  let cfg, ws, role, pc, localStream, pendingIce = [], ringCtx, ringTimer, clock, t0, retry = 0, inCall = false;
+  const qs = location.search;
+  function h(tag, attrs = {}, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'on') for (const [ev, fn] of Object.entries(v)) el.addEventListener(ev, fn);
+      else if (k === 'text') el.textContent = v;
+      else if (v === true) el.setAttribute(k, '');
+      else if (v !== false && v != null) el.setAttribute(k, v);
+    }
+    for (const kid of kids.flat()) if (kid != null) el.append(kid);
+    return el;
+  }
+  function toast(msg) { const m = $('msg'); m.textContent = msg; m.style.display = 'block'; clearTimeout(m._t); m._t = setTimeout(() => m.style.display = 'none', 4500); }
+  async function api(method, path, body) {
+    const r = await fetch(new URL(path.replace(/^\//, '') + (method === 'GET' ? qs : ''), base), {
+      method, cache: 'no-store', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined,
+    });
+    const text = await r.text();
+    if (!r.ok) throw new Error(text || r.statusText);
+    return text ? JSON.parse(text) : {};
+  }
+  const lines = (s) => s.split(/[\n,]/).map(x => x.trim()).filter(Boolean);
+  const icon = (e) => e.kind === 'person' ? '👤' : '📺';
 
-  function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
-  function toast(t) { const m = $('msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(m._t); m._t = setTimeout(() => m.style.display = 'none', 4000); }
-  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  let S = null;            // /api/state
+  let ws, retry = 0;
+  let call = null;         // { id, dir: 'out'|'in', label }
+  let pc, localStream, pendingIce = [], ringCtx, ringTimer, clock, t0;
 
-  // ---------- sonnerie ----------
+  // ---------- views ----------
+  function show(id) {
+    document.querySelectorAll('.screen, .page').forEach(s => s.classList.toggle('on', s.id === id));
+  }
+  const idleView = () => show($('settings').classList.contains('on') ? 'settings' : 'home');
+  function home() { if (!call) show('home'); }
+
+  function renderContacts(contacts) {
+    const box = $('contacts'); box.replaceChildren();
+    if (!contacts.length) {
+      box.append(h('div', { class: 'empty' }, h('div', { text: t('noContacts') }), S?.me.settings ? h('div', { text: t('noContactsAdmin') }) : null));
+      return;
+    }
+    for (const c of contacts) {
+      const eps = c.endpoints || [];
+      const anyAll = eps.some(e => e.ring_all);
+      const targets = [];
+      if (eps.length > 1 && anyAll) targets.push(h('button', { class: 'target all', disabled: !c.online, on: { click: () => startCall(c, '*', c.name) } }, h('span', { text: '📞' }), h('span', { text: t('callEveryone') })));
+      for (const e of eps) targets.push(h('button', { class: 'target', disabled: !c.online, on: { click: () => startCall(c, e.id, e.name) } }, h('span', { text: icon(e) }), h('span', { text: e.name })));
+      box.append(h('div', { class: 'card' },
+        h('div', { class: 'contact-head' }, h('span', { class: 'dot' + (c.online ? ' on' : '') }), h('b', { text: c.name }),
+          h('span', { class: 'muted', text: c.online ? '' : t('offline') })),
+        targets.length ? h('div', { class: 'targets' }, targets) : h('div', { class: 'muted', text: t('noTargets') })));
+    }
+  }
+
+  // ---------- settings ----------
+  function renderSettings() {
+    if (!S?.admin) return;
+    const A = S.admin;
+    $('instName').textContent = S.instance.name;
+    $('instVer').textContent = 'v' + S.version;
+    // endpoints
+    const list = $('epList'); list.replaceChildren();
+    if (!A.endpoints.length) list.append(h('div', { class: 'card muted', text: t('noEndpoints') }));
+    for (const e of A.endpoints) {
+      list.append(h('div', { class: 'card item' },
+        h('span', {}, icon(e) + ' ', h('span', { class: 'name', text: e.name })),
+        h('button', { class: 'act sec', text: '✏️', on: { click: () => editEndpoint(e) } })));
+    }
+    // contacts
+    const cl = $('ctList'); cl.replaceChildren();
+    if (!A.contacts.length) cl.append(h('div', { class: 'card muted', text: t('noCt') }));
+    for (const c of A.contacts) cl.append(contactCard(c));
+    // this device
+    const mine = S.me.endpoints.map(id => A.endpoints.find(e => e.id === id)?.name).filter(Boolean);
+    $('meInfo').textContent = t('meUser', S.me.display) + ' — ' + (mine.length ? t('meEps', mine.join(', ')) : t('meNone'));
+    $('meUa').textContent = S.me.user_agent;
+  }
+
+  function editEndpoint(e) {
+    const isNew = !e;
+    e = e || { name: '', kind: 'screen', match_user_agent: '', match_users: [], ring_all: true, kiosk_url: '', open_service: '', close_service: '', return_button: '', turn_off: [], turn_on: [] };
+    const f = {};
+    const field = (key, label, value, hint, tag = 'input') => {
+      f[key] = h(tag, tag === 'input' ? { value } : {}); if (tag === 'textarea') f[key].value = value;
+      return [h('label', { text: label }), f[key], hint ? h('div', { class: 'hint', text: hint }) : null].filter(Boolean);
+    };
+    f.kind = h('select', {}, h('option', { value: 'screen', text: t('kindScreen') }), h('option', { value: 'person', text: t('kindPerson') }));
+    f.kind.value = e.kind;
+    f.ring_all = h('input', { type: 'checkbox' }); f.ring_all.checked = e.ring_all;
+    const uaUse = h('button', { class: 'act sec', style: 'margin-top:8px', text: t('fUaUse'), on: { click: () => {
+      const ua = S.me.user_agent; const m = ua.match(/KioskSatellite|FreeKiosk|Fully|Kiosk/i);
+      f.match_user_agent.value = m ? m[0] : ua.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    } } });
+    const err = h('div', { class: 'err' });
+    const box = $('epForm'); box.hidden = false;
+    box.replaceChildren(
+      ...field('name', t('fName'), e.name),
+      h('label', { text: t('fKind') }), f.kind,
+      ...field('match_user_agent', t('fUa'), e.match_user_agent), uaUse,
+      ...field('match_users', t('fUsers'), e.match_users.join('\n'), null, 'textarea'),
+      h('label', { class: 'check' }, f.ring_all, t('fRingAll')),
+      h('details', { open: !!e.open_service },
+        h('summary', { text: t('fKiosk') }),
+        ...field('kiosk_url', t('fKioskUrl'), e.kiosk_url, t('fKioskUrlHint')),
+        h('div', { class: 'grid2' },
+          h('div', {}, ...field('open_service', t('fOpen'), e.open_service, t('fOpenHint'))),
+          h('div', {}, ...field('close_service', t('fClose'), e.close_service, t('fCloseHint')))),
+        ...field('return_button', t('fReturn'), e.return_button, 'button.ks_tablette_dashboard'),
+        ...field('turn_off', t('fOff'), e.turn_off.join('\n'), null, 'textarea'),
+        ...field('turn_on', t('fOn'), e.turn_on.join('\n'), null, 'textarea')),
+      err,
+      h('div', { class: 'acts' },
+        h('button', { class: 'act', text: t('save'), on: { click: async () => {
+          const body = { name: f.name.value, kind: f.kind.value, match_user_agent: f.match_user_agent.value, match_users: lines(f.match_users.value),
+            ring_all: f.ring_all.checked, kiosk_url: f.kiosk_url.value, open_service: f.open_service.value, close_service: f.close_service.value,
+            return_button: f.return_button.value, turn_off: lines(f.turn_off.value), turn_on: lines(f.turn_on.value) };
+          if (!isNew) body.id = e.id;
+          try { await api('POST', 'api/endpoints', body); box.hidden = true; toast(t('saved')); await refresh(true); }
+          catch (x) { err.textContent = x.message; }
+        } } }),
+        h('button', { class: 'act sec', text: t('close'), on: { click: () => { box.hidden = true; } } }),
+        isNew ? null : h('button', { class: 'act danger', text: t('remove'), on: { click: async () => {
+          if (!confirm(t('confirmRemoveEp', e.name))) return;
+          await api('DELETE', 'api/endpoints/' + e.id); box.hidden = true; await refresh(true);
+        } } })));
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function contactCard(c) {
+    const url = h('input', { value: c.url || '' });
+    const shareAll = h('input', { type: 'checkbox' }); shareAll.checked = !(c.share || []).length;
+    const boxes = S.admin.endpoints.map(e => { const cb = h('input', { type: 'checkbox', value: e.id }); cb.checked = (c.share || []).includes(e.id); return h('label', { class: 'check' }, cb, e.name); });
+    const sync = () => boxes.forEach(b => { b.style.display = shareAll.checked ? 'none' : 'flex'; });
+    shareAll.addEventListener('change', sync); sync();
+    const err = h('div', { class: 'err', text: !c.online && c.error ? c.error : '' });
+    return h('div', { class: 'card' },
+      h('div', { class: 'contact-head' }, h('span', { class: 'dot' + (c.online ? ' on' : '') }), h('b', { text: c.name }), h('span', { class: 'muted', text: c.online ? t('online') : t('offline') })),
+      h('details', {}, h('summary', { text: t('settings') }),
+        h('label', { text: t('ctAddress') }), url,
+        h('label', { text: t('ctShare') }), h('label', { class: 'check' }, shareAll, t('ctShareAll')), boxes,
+        h('div', { class: 'acts' },
+          h('button', { class: 'act', text: t('save'), on: { click: async () => {
+            const share = shareAll.checked ? [] : boxes.map(b => b.querySelector('input')).filter(i => i.checked).map(i => i.value);
+            try { await api('PATCH', 'api/contacts/' + c.id, { url: url.value, share }); toast(t('saved')); await refresh(); } catch (x) { err.textContent = x.message; }
+          } } }),
+          h('button', { class: 'act danger', text: t('remove'), on: { click: async () => {
+            if (!confirm(t('confirmUnpair', c.name))) return;
+            await api('DELETE', 'api/contacts/' + c.id); await refresh();
+          } } }))),
+      err);
+  }
+
+  function addressField() {
+    const id = 'urls' + Math.random().toString(36).slice(2);
+    const input = h('input', { value: S.admin.suggested_urls[0] || '', list: id, placeholder: 'http://192.168.1.10:' + S.admin.peer_port });
+    return [input, [h('label', { text: t('myAddress') }), input, h('datalist', { id }, S.admin.suggested_urls.map(u => h('option', { value: u }))),
+      h('div', { class: 'hint', text: t('myAddressHint', S.admin.peer_port) })]];
+  }
+
+  $('btnInvite').onclick = () => {
+    const box = $('pairBox'); box.hidden = false;
+    const [url, urlField] = addressField();
+    const out = h('div'); const err = h('div', { class: 'err' });
+    box.replaceChildren(...urlField.filter(Boolean), err, h('div', { class: 'acts' },
+      h('button', { class: 'act', text: t('makeCode'), on: { click: async () => {
+        err.textContent = '';
+        try {
+          const r = await api('POST', 'api/invite', { url: url.value });
+          const code = h('div', { class: 'code', text: r.code });
+          out.replaceChildren(h('p', { class: 'hint', text: t('codeIntro') }), code, h('div', { class: 'acts' },
+            h('button', { class: 'act sec', text: t('copy'), on: { click: async (ev) => {
+              try { await navigator.clipboard.writeText(r.code); ev.target.textContent = t('copied'); }
+              catch { const sel = getSelection(); sel.selectAllChildren(code); }
+            } } })));
+        } catch (x) { err.textContent = x.message; }
+      } } }),
+      h('button', { class: 'act sec', text: t('close'), on: { click: () => { box.hidden = true; } } })), out);
+  };
+
+  $('btnJoin').onclick = () => {
+    const box = $('pairBox'); box.hidden = false;
+    const code = h('textarea', { placeholder: 'HAV1.…' });
+    const [url, urlField] = addressField();
+    const err = h('div', { class: 'err' });
+    box.replaceChildren(h('label', { text: t('pasteCode') }), code, ...urlField, err, h('div', { class: 'acts' },
+      h('button', { class: 'act', text: t('doJoin'), on: { click: async (ev) => {
+        err.textContent = ''; ev.target.disabled = true;
+        try { const c = await api('POST', 'api/join', { code: code.value, url: url.value }); box.hidden = true; toast(t('paired', c.name)); await refresh(); }
+        catch (x) { err.textContent = x.message; }
+        ev.target.disabled = false;
+      } } }),
+      h('button', { class: 'act sec', text: t('close'), on: { click: () => { box.hidden = true; } } })));
+  };
+
+  $('btnSettings').onclick = () => { show('settings'); refresh(); };
+  $('btnBack').onclick = () => show('home');
+
+  async function refresh(reconnect = false) {
+    S = await api('GET', 'api/state');
+    $('homeTitle').textContent = S.instance.name;
+    $('btnSettings').hidden = !S.me.settings;
+    renderContacts(S.contacts);
+    renderSettings();
+    if (reconnect && ws && !call) ws.close();   // endpoints changed: get recognised again
+  }
+
+  // ---------- ringtone ----------
   function ringStart(kind) {
     ringStop();
     try {
@@ -110,41 +442,41 @@
       const beep = () => {
         const notes = kind === 'out' ? [[425, 0, 1.0]] : [[880, 0, .25], [660, .3, .25], [880, .6, .25], [660, .9, .25]];
         for (const [f, at, d] of notes) {
-          const o = ringCtx.createOscillator(), g = ringCtx.createGain();
+          const o = ringCtx.createOscillator(), g = ringCtx.createGain(), v = kind === 'out' ? .15 : .6;
           o.frequency.value = f; o.type = 'sine';
-          const t = ringCtx.currentTime + at;
-          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(kind === 'out' ? .15 : .6, t + .02);
-          g.gain.setValueAtTime(kind === 'out' ? .15 : .6, t + d - .03); g.gain.linearRampToValueAtTime(0, t + d);
-          o.connect(g).connect(ringCtx.destination); o.start(t); o.stop(t + d + .05);
+          const s = ringCtx.currentTime + at;
+          g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(v, s + .02);
+          g.gain.setValueAtTime(v, s + d - .03); g.gain.linearRampToValueAtTime(0, s + d);
+          o.connect(g).connect(ringCtx.destination); o.start(s); o.stop(s + d + .05);
         }
       };
       beep(); ringTimer = setInterval(beep, kind === 'out' ? 4000 : 2200);
     } catch (e) {}
     if (kind === 'in' && navigator.vibrate) navigator.vibrate([600, 400, 600, 400, 600]);
   }
-  function ringStop() { clearInterval(ringTimer); ringTimer = null; if (ringCtx) { ringCtx.close().catch(() => {}); ringCtx = null; } }
+  function ringStop() { clearInterval(ringTimer); ringTimer = null; if (ringCtx) { ringCtx.close().catch(() => {}); ringCtx = null; } if (navigator.vibrate) navigator.vibrate(0); }
 
-  // ---------- média ----------
+  // ---------- media ----------
   async function getMedia() {
     if (localStream) return localStream;
     if (!navigator.mediaDevices || !window.isSecureContext) throw new Error('insecure');
     localStream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
     });
     $('local').srcObject = localStream;
     return localStream;
   }
-  function stopMedia() { if (localStream) localStream.getTracks().forEach(t => t.stop()); localStream = null; $('local').srcObject = null; $('remote').srcObject = null; }
+  function stopMedia() { if (localStream) localStream.getTracks().forEach(tr => tr.stop()); localStream = null; $('local').srcObject = null; $('remote').srcObject = null; }
 
   function makePc() {
-    pc = new RTCPeerConnection({ iceServers: cfg.ice });
-    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-    pc.onicecandidate = (e) => { if (e.candidate) send({ type: 'signal', data: { ice: e.candidate } }); };
+    pc = new RTCPeerConnection({ iceServers: S.ice });
+    localStream.getTracks().forEach(tr => pc.addTrack(tr, localStream));
+    pc.onicecandidate = (e) => { if (e.candidate && call) send({ type: 'signal', call: call.id, data: { ice: e.candidate } }); };
     pc.ontrack = (e) => { const v = $('remote'); if (v.srcObject !== e.streams[0]) { v.srcObject = e.streams[0]; v.play().catch(() => {}); } };
     pc.onconnectionstatechange = () => {
       const s = pc && pc.connectionState;
-      $('net').textContent = s === 'disconnected' ? 'Connexion instable…' : s === 'failed' ? 'Connexion perdue' : '';
+      $('net').textContent = s === 'disconnected' ? t('unstable') : s === 'failed' ? t('lost') : '';
       if (s === 'failed') hangup();
     };
   }
@@ -156,7 +488,7 @@
       pendingIce = [];
       if (d.sdp.type === 'offer') {
         await pc.setLocalDescription(await pc.createAnswer());
-        send({ type: 'signal', data: { sdp: pc.localDescription } });
+        send({ type: 'signal', call: call.id, data: { sdp: pc.localDescription } });
       }
     } else if (d.ice) {
       if (pc.remoteDescription) await pc.addIceCandidate(d.ice).catch(() => {});
@@ -165,85 +497,99 @@
   }
 
   function enterCall() {
-    inCall = true; ringStop(); show('call');
+    ringStop(); show('call');
     t0 = Date.now(); clearInterval(clock);
     clock = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); $('timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }, 1000);
   }
   function cleanup() {
-    ringStop(); clearInterval(clock); inCall = false;
+    ringStop(); clearInterval(clock);
     if (pc) { pc.close(); pc = null; } pendingIce = []; stopMedia();
-    $('btnMic').classList.remove('off'); $('btnCam').classList.remove('off');
+    $('btnMic').classList.remove('off'); $('btnCam').classList.remove('off'); $('net').textContent = '';
   }
-  const REASONS = { hangup: 'Appel terminé', declined: 'Appel refusé', missed: 'Pas de réponse', disconnected: 'Appel coupé', gone: 'Appel terminé', taken: 'Répondu sur un autre écran' };
+  const REASON = { hangup: 'endHangup', declined: 'endDeclined', missed: 'endMissed', busy: 'endBusy', unavailable: 'endUnavailable',
+    offline: 'endOffline', disconnected: 'endDisconnected', cancelled: 'endCancelled', taken: 'endTaken' };
   function finished(reason) {
-    cleanup();
-    $('endTitle').textContent = REASONS[reason] || 'Appel terminé';
-    $('endSub').textContent = role === 'appelant' && reason === 'missed' ? 'Ils n\'ont pas décroché, réessaie plus tard.' : '';
+    const dir = call && call.dir;
+    call = null; cleanup();
+    $('endTitle').textContent = t(REASON[reason] || 'endHangup');
+    $('endSub').textContent = dir === 'out' && reason === 'missed' ? t('missedSub') : '';
     show('end');
-    setTimeout(() => show(role === 'tablette' ? 'wait' : 'idle'), role === 'tablette' ? 2500 : 3000);
+    setTimeout(() => { if (!call) home(); }, 2500);
   }
-  function hangup() { send({ type: 'hangup' }); finished('hangup'); }
+  function hangup() { if (call) send({ type: 'hangup', call: call.id }); finished('hangup'); }
 
   // ---------- actions ----------
-  $('btnCall').onclick = async () => {
-    try { await getMedia(); } catch (e) { toast(e.message === 'insecure' ? 'Il faut ouvrir Home Assistant en HTTPS pour la caméra.' : 'Autorise la caméra et le micro.'); return; }
-    send({ type: 'call' }); show('out'); ringStart('out');
-  };
-  $('btnCancel').onclick = hangup;
+  async function startCall(contact, endpoint, label) {
+    if (call) return;
+    try { await getMedia(); }
+    catch (e) { toast(e.message === 'insecure' ? t('needHttps') : t('needPerm')); return; }
+    call = { id: null, dir: 'out', label };
+    $('outTitle').textContent = t('calling', label);
+    $('outSub').textContent = endpoint === '*' ? contact.name : t('connecting');
+    show('out'); ringStart('out');
+    send({ type: 'call', contact: contact.id, endpoint });
+  }
+  let orphan = false;   // cancelled before the server gave us the call id
+  $('btnCancel').onclick = () => { if (call && call.id) send({ type: 'hangup', call: call.id }); else orphan = true; finished('cancelled'); };
   $('btnAccept').onclick = async () => {
+    if (!call) return;
     ringStop();
-    try { await getMedia(); } catch (e) { toast('Caméra ou micro indisponible'); }
-    if (!localStream) { send({ type: 'decline' }); finished('disconnected'); return; }
-    makePc(); send({ type: 'accept' }); enterCall();
+    try { await getMedia(); } catch (e) { toast(e.message === 'insecure' ? t('needHttps') : t('noMedia')); }
+    if (!localStream) { send({ type: 'decline', call: call.id }); finished('disconnected'); return; }
+    makePc(); send({ type: 'accept', call: call.id }); enterCall();
   };
-  $('btnDecline').onclick = () => { send({ type: 'decline' }); finished('declined'); };
+  $('btnDecline').onclick = () => { if (call) send({ type: 'decline', call: call.id }); finished('declined'); };
   $('btnHang').onclick = hangup;
-  $('btnMic').onclick = () => { if (!localStream) return; const t = localStream.getAudioTracks()[0]; if (t) { t.enabled = !t.enabled; $('btnMic').classList.toggle('off', !t.enabled); } };
-  $('btnCam').onclick = () => { if (!localStream) return; const t = localStream.getVideoTracks()[0]; if (t) { t.enabled = !t.enabled; $('btnCam').classList.toggle('off', !t.enabled); } };
+  $('btnMic').onclick = () => { const tr = localStream && localStream.getAudioTracks()[0]; if (tr) { tr.enabled = !tr.enabled; $('btnMic').classList.toggle('off', !tr.enabled); } };
+  $('btnCam').onclick = () => { const tr = localStream && localStream.getVideoTracks()[0]; if (tr) { tr.enabled = !tr.enabled; $('btnCam').classList.toggle('off', !tr.enabled); } };
 
-  // ---------- signalisation ----------
+  // ---------- signalling ----------
+  const ERR = { busy_local: 'errBusyLocal', offline: 'errOffline', unavailable: 'errUnavailable', unknown_contact: 'errUnknownContact' };
+  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  const mine = (m) => call && call.id === m.call;
+
   async function onMessage(m) {
     switch (m.type) {
-      case 'welcome':
-        retry = 0;
-        if (!inCall) show(role === 'tablette' ? 'wait' : 'idle');
+      case 'welcome': retry = 0; if (S) { S.contacts = m.contacts; renderContacts(m.contacts); } break;
+      case 'directory':
+        if (S) { S.contacts = m.contacts; renderContacts(m.contacts); }
+        if ($('settings').classList.contains('on')) refresh().catch(() => {});
         break;
+      case 'calling':
+        if (orphan) { orphan = false; send({ type: 'hangup', call: m.call }); break; }
+        if (call && call.dir === 'out' && !call.id) call.id = m.call;
+        break;
+      case 'ringing': if (mine(m)) $('outSub').textContent = t('ringingThere'); break;
+      case 'error': orphan = false; if (call && call.dir === 'out' && !call.id) { call = null; cleanup(); home(); } toast(t(ERR[m.code] || 'errUnavailable')); break;
       case 'incoming':
-        if (role !== 'tablette' || inCall) break;
-        $('inTitle').textContent = (m.from || 'Quelqu\'un') + ' vous appelle';
+        if (call) break;
+        call = { id: m.call, dir: 'in', label: m.from };
+        $('inTitle').textContent = t('incoming', m.from || '?');
+        $('inSub').textContent = t('incomingFrom', m.contact || '');
         show('in'); ringStart('in');
         break;
       case 'accepted':
+        if (!mine(m)) break;
         enterCall(); makePc();
         await pc.setLocalDescription(await pc.createOffer());
-        send({ type: 'signal', data: { sdp: pc.localDescription } });
+        send({ type: 'signal', call: call.id, data: { sdp: pc.localDescription } });
         break;
-      case 'signal': await onSignal(m.data || {}); break;
-      case 'busy': cleanup(); toast('Un appel est déjà en cours'); show('idle'); break;
-      case 'taken': if (!inCall) finished('taken'); break;
-      case 'ended': finished(m.reason); break;
+      case 'signal': if (mine(m)) await onSignal(m.data || {}); break;
+      case 'taken': if (mine(m)) finished('taken'); break;
+      case 'ended': if (mine(m)) finished(m.reason); break;
     }
   }
   function connect() {
-    const u = new URL('ws', base); u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-    if (new URLSearchParams(location.search).get('role')) u.search = location.search;
+    const u = new URL('ws', base); u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:'; u.search = qs;
     ws = new WebSocket(u);
     ws.onmessage = (e) => { try { onMessage(JSON.parse(e.data)); } catch (err) { console.error(err); } };
     ws.onclose = () => {
-      if (inCall || $('out').classList.contains('on') || $('in').classList.contains('on')) finished('disconnected');
+      if (call) finished('disconnected');
       setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000));
     };
   }
 
-  (async () => {
-    const q = location.search;
-    cfg = await (await fetch(new URL('config.json' + q, base), { cache: 'no-store' })).json();
-    role = cfg.role;
-    $('idleTitle').textContent = 'Appeler ' + cfg.device_name;
-    $('outTitle').textContent = 'Appel de ' + cfg.device_name + '…';
-    show(role === 'tablette' ? 'wait' : 'idle');
-    connect();
-  })().catch(() => toast('Impossible de joindre le serveur'));
+  refresh().then(connect).catch(() => { toast(t('serverDown')); setTimeout(() => location.reload(), 10000); });
 })();
 </script>
 </body>
