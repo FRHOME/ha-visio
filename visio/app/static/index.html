@@ -168,8 +168,10 @@
       endHangup: 'Call ended', endDeclined: 'Call declined', endMissed: 'No answer', endBusy: 'Busy', endUnavailable: 'Unavailable',
       endOffline: 'Not reachable', endDisconnected: 'Call dropped', endCancelled: 'Call ended', endTaken: 'Answered on another screen',
       missedSub: 'Try again later.', unstable: 'Unstable connection…', lost: 'Connection lost',
-      needHttps: 'Camera access needs Home Assistant opened over HTTPS (or http://127.0.0.1 on a kiosk).', needPerm: 'Allow the camera and microphone.',
-      noMedia: 'Camera or microphone unavailable', serverDown: 'Cannot reach the add-on', errBusyLocal: 'A call is already in progress',
+      needHttps: 'No camera or mic over plain HTTP: open Home Assistant over HTTPS (or http://127.0.0.1 on a kiosk). You will see and hear without being seen.',
+      needPerm: 'Camera/mic blocked by the browser (padlock icon next to the address). You will see and hear without being seen.',
+      noDevice: 'No camera or microphone found: you will see and hear without being seen.', noCam: 'No camera found: audio only from this side.',
+      busyDevice: 'Camera or mic already used by another app: you will see and hear without being seen.', serverDown: 'Cannot reach the add-on', errBusyLocal: 'A call is already in progress',
       errOffline: 'This Home Assistant is not reachable', errUnavailable: 'Not available', errUnknownContact: 'Unknown contact',
       instanceHint: 'The name and network options are in the add-on Configuration tab.',
       endpoints: 'Screens & people here', endpointsHint: 'What other Home Assistants can call on this one.',
@@ -197,8 +199,10 @@
       endHangup: 'Appel terminé', endDeclined: 'Appel refusé', endMissed: 'Pas de réponse', endBusy: 'Occupé', endUnavailable: 'Indisponible',
       endOffline: 'Injoignable', endDisconnected: 'Appel coupé', endCancelled: 'Appel terminé', endTaken: 'Répondu sur un autre écran',
       missedSub: 'Réessaie plus tard.', unstable: 'Connexion instable…', lost: 'Connexion perdue',
-      needHttps: 'La caméra exige Home Assistant ouvert en HTTPS (ou http://127.0.0.1 sur un kiosque).', needPerm: 'Autorise la caméra et le micro.',
-      noMedia: 'Caméra ou micro indisponible', serverDown: 'Impossible de joindre le module', errBusyLocal: 'Un appel est déjà en cours',
+      needHttps: 'Pas de caméra ni de micro en HTTP : ouvre Home Assistant en HTTPS (ou http://127.0.0.1 sur un kiosque). Tu verras et entendras sans être vu.',
+      needPerm: 'Caméra/micro bloqués par le navigateur (cadenas à gauche de l\'adresse). Tu verras et entendras sans être vu.',
+      noDevice: 'Aucune caméra ni micro trouvés : tu verras et entendras sans être vu.', noCam: 'Aucune caméra trouvée : son seulement de ce côté.',
+      busyDevice: 'Caméra ou micro déjà utilisés par une autre app : tu verras et entendras sans être vu.', serverDown: 'Impossible de joindre le module', errBusyLocal: 'Un appel est déjà en cours',
       errOffline: 'Ce Home Assistant est injoignable', errUnavailable: 'Indisponible', errUnknownContact: 'Contact inconnu',
       instanceHint: 'Le nom et les options réseau sont dans l\'onglet Configuration du module.',
       endpoints: 'Écrans et personnes ici', endpointsHint: 'Ce que les autres Home Assistant peuvent appeler sur celui-ci.',
@@ -457,21 +461,39 @@
   function ringStop() { clearInterval(ringTimer); ringTimer = null; if (ringCtx) { ringCtx.close().catch(() => {}); ringCtx = null; } if (navigator.vibrate) navigator.vibrate(0); }
 
   // ---------- media ----------
+  // Never blocks a call: falls back to audio only, then to receive-only, and says why.
   async function getMedia() {
     if (localStream) return localStream;
-    if (!navigator.mediaDevices || !window.isSecureContext) throw new Error('insecure');
-    localStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-    });
-    $('local').srcObject = localStream;
+    let note = null;
+    if (!navigator.mediaDevices || !window.isSecureContext) {
+      note = 'needHttps';
+    } else {
+      const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+      const video = { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } };
+      let err = null;
+      for (const c of [{ audio, video }, { audio }, { video }]) {
+        try { localStream = await navigator.mediaDevices.getUserMedia(c); break; }
+        catch (e) { err = e; console.warn('getUserMedia', c, e.name, e.message); if (e.name === 'NotAllowedError' || e.name === 'SecurityError') break; }
+      }
+      if (!localStream) note = { NotAllowedError: 'needPerm', SecurityError: 'needPerm', NotReadableError: 'busyDevice', AbortError: 'busyDevice' }[err && err.name] || 'noDevice';
+      else if (!localStream.getVideoTracks().length) note = 'noCam';
+    }
+    if (!localStream) localStream = new MediaStream();
+    if (note) toast(t(note));
+    const hasVideo = localStream.getVideoTracks().length > 0;
+    $('local').srcObject = hasVideo ? localStream : null;
+    $('local').style.display = hasVideo ? '' : 'none';
     return localStream;
   }
-  function stopMedia() { if (localStream) localStream.getTracks().forEach(tr => tr.stop()); localStream = null; $('local').srcObject = null; $('remote').srcObject = null; }
+  function stopMedia() { if (localStream) localStream.getTracks().forEach(tr => tr.stop()); localStream = null; $('local').srcObject = null; $('local').style.display = ''; $('remote').srcObject = null; }
 
-  function makePc() {
+  function makePc(offerer) {
     pc = new RTCPeerConnection({ iceServers: S.ice });
     localStream.getTracks().forEach(tr => pc.addTrack(tr, localStream));
+    if (offerer) {  // still ask for what we cannot send ourselves
+      const kinds = new Set(localStream.getTracks().map(tr => tr.kind));
+      for (const k of ['audio', 'video']) if (!kinds.has(k)) pc.addTransceiver(k, { direction: 'recvonly' });
+    }
     pc.onicecandidate = (e) => { if (e.candidate && call) send({ type: 'signal', call: call.id, data: { ice: e.candidate } }); };
     pc.ontrack = (e) => { const v = $('remote'); if (v.srcObject !== e.streams[0]) { v.srcObject = e.streams[0]; v.play().catch(() => {}); } };
     pc.onconnectionstatechange = () => {
@@ -521,8 +543,7 @@
   // ---------- actions ----------
   async function startCall(contact, endpoint, label) {
     if (call) return;
-    try { await getMedia(); }
-    catch (e) { toast(e.message === 'insecure' ? t('needHttps') : t('needPerm')); return; }
+    await getMedia();
     call = { id: null, dir: 'out', label };
     $('outTitle').textContent = t('calling', label);
     $('outSub').textContent = endpoint === '*' ? contact.name : t('connecting');
@@ -534,9 +555,8 @@
   $('btnAccept').onclick = async () => {
     if (!call) return;
     ringStop();
-    try { await getMedia(); } catch (e) { toast(e.message === 'insecure' ? t('needHttps') : t('noMedia')); }
-    if (!localStream) { send({ type: 'decline', call: call.id }); finished('disconnected'); return; }
-    makePc(); send({ type: 'accept', call: call.id }); enterCall();
+    await getMedia();
+    makePc(false); send({ type: 'accept', call: call.id }); enterCall();
   };
   $('btnDecline').onclick = () => { if (call) send({ type: 'decline', call: call.id }); finished('declined'); };
   $('btnHang').onclick = hangup;
@@ -570,7 +590,7 @@
         break;
       case 'accepted':
         if (!mine(m)) break;
-        enterCall(); makePc();
+        enterCall(); makePc(true);
         await pc.setLocalDescription(await pc.createOffer());
         send({ type: 'signal', call: call.id, data: { sdp: pc.localDescription } });
         break;
