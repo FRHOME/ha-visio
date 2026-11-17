@@ -16,5 +16,8 @@ configuration:
     name: Mot de passe TURN
   log_level:
     name: Niveau de journalisation
+  install_card:
+    name: Intégration aux dashboards
+    description: "Installe la carte HA Visio et le bandeau d'appel entrant sur tous les dashboards (copie ha-visio.js dans /config/www et l'enregistre comme ressource)."
 network:
   8100/tcp: Lien pair avec les autres instances Home Assistant

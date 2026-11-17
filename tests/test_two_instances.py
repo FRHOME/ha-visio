@@ -77,6 +77,16 @@ async def main():
         st, _ = await api(s, A, "POST", "/api/endpoints", {"name": "x", "match_user_agent": "(("})
         check(st == 400, "invalid regex rejected")
 
+        print("Dashboard card install")
+        await asyncio.sleep(1)
+        js = "/tmp/visio-toulouse/haconfig/www/ha-visio/ha-visio.js"
+        check(os.path.exists(js), "ha-visio.js copied to /config/www/ha-visio")
+        reg = [json.loads(l) for l in open(SUP_LOG_B)] if os.path.exists(SUP_LOG_B) else []
+        created = [x for x in reg if x["path"] == "ws:lovelace/resources/create"]
+        check(created and created[0]["body"]["url"].startswith("/local/ha-visio/ha-visio.js?v=") and "slug=test_visio" in created[0]["body"]["url"], "Lovelace resource registered")
+        sensor = [x for x in reg if x["path"] == "/core/api/states/sensor.ha_visio"]
+        check(sensor and sensor[-1]["body"]["attributes"].get("ingress_entry") == "/api/hassio_ingress/TOKEN", "sensor exposes ingress_entry")
+
         print("Pairing")
         st, inv = await api(s, A, "POST", "/api/invite", {"url": A_PEER})
         check(st == 200 and inv["code"].startswith("HAV1."), "A: invitation created")
@@ -206,7 +216,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    subprocess.run("rm -rf /tmp/visio-paris /tmp/visio-toulouse", shell=True)
+    subprocess.run(f"rm -rf /tmp/visio-paris /tmp/visio-toulouse {SUP_LOG_B} /tmp/visio-sup-a.log", shell=True)
     sup_a = subprocess.Popen([sys.executable, os.path.join(HERE, "fake_supervisor.py"), "19000", "/tmp/visio-sup-a.log"])
     sup_b = subprocess.Popen([sys.executable, os.path.join(HERE, "fake_supervisor.py"), "29000", SUP_LOG_B])
     start("paris", 18099, 18100, 19000); start("toulouse", 28099, 28100, 29000)

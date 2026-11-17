@@ -20,6 +20,7 @@ class HomeAssistant:
     def __init__(self) -> None:
         self.session: aiohttp.ClientSession | None = None
         self.slug: str | None = None
+        self.ingress_entry: str | None = None
 
     async def start(self) -> None:
         if not SUPERVISOR_TOKEN:
@@ -64,7 +65,9 @@ class HomeAssistant:
             return
         data = await self._get("/addons/self/info")
         if data:
-            self.slug = data.get("data", {}).get("slug")
+            info = data.get("data", {})
+            self.slug = info.get("slug")
+            self.ingress_entry = info.get("ingress_entry")
             log.info("Add-on slug: %s", self.slug)
 
     async def host_ips(self) -> list[str]:
@@ -94,5 +97,30 @@ class HomeAssistant:
     async def publish(self, state: str, **attrs) -> None:
         await self._post(
             f"/core/api/states/{SENSOR}",
-            {"state": state, "attributes": {"friendly_name": "HA Visio", "icon": "mdi:phone-in-talk", **attrs}},
+            {"state": state, "attributes": {
+                "friendly_name": "HA Visio", "icon": "mdi:phone-in-talk",
+                "ingress_entry": self.ingress_entry, "addon_slug": self.slug, **attrs}},
         )
+
+    async def core_ws(self, *commands: dict) -> list:
+        """Run commands on the Core WebSocket API (through the Supervisor proxy)."""
+        assert self.session
+        results = []
+        ws_url = SUPERVISOR_URL.replace("http", "ws", 1) + "/core/websocket"
+        async with self.session.ws_connect(ws_url) as ws:
+            msg = await ws.receive_json(timeout=10)
+            if msg.get("type") == "auth_required":
+                await ws.send_json({"type": "auth", "access_token": SUPERVISOR_TOKEN})
+                msg = await ws.receive_json(timeout=10)
+            if msg.get("type") != "auth_ok":
+                raise PermissionError(f"Core websocket auth failed: {msg.get('type')}")
+            for i, cmd in enumerate(commands, start=1):
+                await ws.send_json({"id": i, **cmd})
+                while True:
+                    res = await ws.receive_json(timeout=15)
+                    if res.get("id") == i:
+                        break
+                if not res.get("success"):
+                    raise RuntimeError(f"{cmd.get('type')}: {res.get('error')}")
+                results.append(res.get("result"))
+        return results

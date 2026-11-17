@@ -8,7 +8,8 @@ Video calls between Home Assistant instances, on any screen that shows Home Assi
 
 - Install the same add-on on each Home Assistant, pair them once with a one-time code.
 - Each instance lists its contacts and what can be called there: wall screens, people.
-- Call a precise screen or person, or everyone; Answer / Decline on any HA screen.
+- Call a precise screen or person, or everyone, from a dashboard card (`custom:ha-visio-card`).
+- Incoming calls ring on every dashboard with a phone-like banner (Answer / Decline) that never takes over the screen; the call window can shrink to a floating thumbnail.
 - Kiosk screens are woken up, the call page opens, the screensaver is paused, then everything goes back to the dashboard.
 - Calls in both directions; presence; per-contact sharing.
 - `sensor.ha_visio` and `ha_visio_*` events for automations.

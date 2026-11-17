@@ -39,7 +39,27 @@ Per contact you can choose **what it may call here** (everything by default).
 
 Open **Visio**: each contact shows its screens and people. Tap one, or **Everyone** to ring every screen/person marked *Rings when a contact calls “Everyone”*. The first to answer takes the call; the others stop ringing.
 
+## On your dashboards
+
+The add-on installs a dashboard module by itself (option `install_card`, on by default): it copies `ha-visio.js` to `/config/www/ha-visio/` and adds it to *Settings → Dashboards → Resources*. Reload the browser page once after the first start.
+
+- **Incoming calls** ring on every dashboard of that Home Assistant — browser, companion app, wall tablet — with a banner at the top of the screen, like a phone: **Decline** or **Answer**. The dashboard stays usable while it rings.
+- **During a call** the video opens in a window over the dashboard; **Shrink** turns it into a thumbnail you can drag around, tap it to bring it back.
+- **To call**, add the card anywhere, for example in a pop-up:
+
+```yaml
+type: custom:ha-visio-card
+title: Appeler          # optional, "" to hide the header
+contacts: [Toulouse]    # optional: only these contacts
+endpoints: [Tablette]   # optional: only these screens/people
+show_everyone: true     # optional: the "Everyone" button
+```
+
+The banner rings on the screens and people the call targets, as recognised in *Screens & people here* (User-Agent for screens, Home Assistant user for people).
+
 ## Kiosk screens (Kiosk Satellite…)
+
+With the dashboard module, a kiosk showing a dashboard rings by itself: you only need *Switched off during the call* (screensaver, motion detection holding the camera). The page-opening services below are only useful for kiosks that do not show a Home Assistant dashboard.
 
 For a screen, open **Kiosk control** to let HA Visio wake it up on an incoming call:
 
@@ -69,7 +89,7 @@ Wall screens with kiosk control get the calling page but not the settings.
 
 | | |
 |---|---|
-| `sensor.ha_visio` | `idle`, `calling`, `ringing` or `active`; attribute `calls` lists the current calls. |
+| `sensor.ha_visio` | `idle`, `calling`, `ringing` or `active`; attribute `calls` lists the current calls; `ingress_entry` is used by the dashboard module. |
 | Event `ha_visio_incoming` | `call_id`, `from`, `contact`, `endpoints`, `endpoint_ids` — e.g. raise the tablet volume, send a notification. |
 | Event `ha_visio_answered` | `call_id`, `from`. |
 | Event `ha_visio_ended` | `call_id`, `direction`, `reason` (`hangup`, `declined`, `missed`, `busy`, `unavailable`, `offline`, `disconnected`, `cancelled`), `remote`, `contact`, `duration`. |
@@ -84,3 +104,4 @@ Wall screens with kiosk control get the calling page but not the settings.
 | `ice_servers` | Google STUN | STUN/TURN URLs. |
 | `turn_username` / `turn_password` | empty | Only for a `turn:` server. |
 | `log_level` | `info` | |
+| `install_card` | `true` | Install the dashboard module (banner + card). |

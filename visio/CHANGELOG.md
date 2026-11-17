@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+Dashboard integration.
+
+- Incoming calls ring on every dashboard (browser, companion app, kiosk) with a phone-like banner at the top: Answer / Decline, the dashboard stays usable.
+- Call window over the dashboard, can be shrunk to a draggable floating thumbnail.
+- New `custom:ha-visio-card`: contacts and their screens/people to call, fits in a pop-up (Bubble Card…). Options: `title`, `icon`, `contacts`, `endpoints`, `show_everyone`.
+- The add-on installs the module itself (`/config/www/ha-visio/ha-visio.js` + Lovelace resource). Option `install_card`.
+- `sensor.ha_visio` now exposes `ingress_entry` and is republished every minute (survives Core restarts).
+
 ## 0.2.2
 
 - A missing, blocked or busy camera/microphone no longer prevents calling or answering: falls back to audio only, then to see-and-hear without being seen, with a message giving the actual cause.
